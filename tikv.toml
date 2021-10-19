@@ -1,0 +1,6 @@
+[storage]
+enable-ttl = true
+
+[rocksdb]
+# limit of GitHub Actions
+max-open-files = 1024

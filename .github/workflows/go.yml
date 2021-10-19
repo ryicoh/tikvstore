@@ -1,0 +1,29 @@
+name: Go
+
+on: [push, pull_request]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [1.16, 1.15, 1.17]
+        tikv: [v4.0.15, v5.0.4, v5.1.1, v5.2.1]
+    steps:
+    - uses: actions/checkout@v2
+    - run: curl --proto '=https' --tlsv1.2 -sSf https://tiup-mirrors.pingcap.com/install.sh | sh
+    - run: ~/.tiup/bin/tiup install tidb:${{ matrix.tikv }} tikv:${{ matrix.tikv }} pd:${{ matrix.tikv }}
+    - run: ~/.tiup/components/pd/${{ matrix.tikv }}/pd-server &
+    - run: ~/.tiup/components/tikv/${{ matrix.tikv }}/tikv-server --config tikv.toml &
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go }}
+    - name: Build
+      run: go build -v ./...
+
+    - name: Vet
+      run: go vet -v ./...
+
+    - name: Test
+      run: go test -v ./...
+
